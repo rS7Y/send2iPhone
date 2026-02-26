@@ -30,7 +30,7 @@ Right-click image → Chrome Extension → Local Bridge (localhost:7890) → App
 ### 1. Clone & start the bridge
 
 ```bash
-git clone https://github.com/nicezap/send2iPhone.git
+git clone https://github.com/rS7Y/send2iPhone.git
 cd send2iPhone/bridge
 node server.js
 ```
@@ -182,3 +182,7 @@ PRs welcome. Keep it simple — zero dependencies is a feature.
 ## License
 
 [MIT](LICENSE)
+
+## Contact
+
+Send me a mail at rusty@tapzap.app
