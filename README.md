@@ -1,10 +1,6 @@
 # send2iPhone
 
 <p align="center">
-  <img src="icon.png" width="128" height="128" alt="send2iPhone icon">
-</p>
-
-<p align="center">
   <strong>Right-click any image in Chrome → send it to your iPhone via iMessage.</strong>
 </p>
 
