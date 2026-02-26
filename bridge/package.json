@@ -1,0 +1,15 @@
+{
+    "name": "send2iphone-bridge",
+    "version": "1.0.0",
+    "description": "Local bridge server for send2iPhone Chrome extension",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "keywords": [
+        "imessage",
+        "chrome-extension",
+        "macos"
+    ],
+    "license": "MIT"
+}
