@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>send2iphone — right-click any image. send it to your iphone.</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --white: #FFFFFF;
+      --black: #000000;
+      --accent: #FF4500;
+      --gray: #F5F5F5;
+      --border: 1px solid #000000;
+      --heading: 'Bebas Neue', sans-serif;
+      --mono: 'JetBrains Mono', 'SF Mono', 'Roboto Mono', 'Fira Code', monospace;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--mono);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--black);
+      background: var(--white);
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* code ghosting gutters */
+    body::before,
+    body::after {
+      content:
+        "const bridge = require('./server');\n"
+        "app.listen(7890, '127.0.0.1');\n"
+        "// zero dependencies\n"
+        "osascript send-image.applescript\n"
+        "chrome.contextMenus.create({\n"
+        "  id: 'send2iphone',\n"
+        "  title: '📱 Send to iPhone',\n"
+        "  contexts: ['image']\n"
+        "});\n"
+        "fetch('http://localhost:7890/send'\n"
+        "const img = await download(url);\n"
+        "// nothing leaves your machine\n"
+        "Messages.app → iMessage → 📱\n"
+        "rm /tmp/send2iphone_*.jpg\n"
+        "launchctl load bridge.plist\n";
+      position: fixed;
+      top: 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 2;
+      color: rgba(0,0,0,0.04);
+      white-space: pre;
+      pointer-events: none;
+      z-index: 0;
+      width: 200px;
+    }
+    body::before { left: 12px; }
+    body::after { right: 12px; text-align: right; }
+
+    /* nav */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--white);
+      border-bottom: var(--border);
+    }
+    .nav-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+    }
+    .nav-brand {
+      font-weight: 700;
+      font-size: 16px;
+      text-decoration: none;
+      color: var(--black);
+      letter-spacing: -0.02em;
+    }
+    .nav-brand span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 13px;
+      color: var(--black);
+      text-decoration: none;
+      opacity: 0.6;
+      transition: opacity 0.15s;
+    }
+    .nav-links a:hover { opacity: 1; }
+
+    /* main container */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* hero */
+    .hero {
+      padding: 80px 0 60px;
+      border-bottom: var(--border);
+    }
+    .hero-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: lowercase;
+      padding: 4px 12px;
+      border: var(--border);
+      margin-bottom: 28px;
+      color: var(--black);
+    }
+    .hero h1 {
+      font-family: var(--heading);
+      font-size: 64px;
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .hero h1 .accent { color: var(--accent); }
+    .hero p {
+      font-size: 16px;
+      opacity: 0.6;
+      max-width: 560px;
+      margin-bottom: 36px;
+      line-height: 1.8;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--black);
+      color: var(--white);
+      padding: 14px 28px;
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-transform: lowercase;
+    }
+    .hero-cta:hover { background: #222; }
+    .hero-cta-secondary {
+      background: transparent;
+      color: var(--black);
+      border: var(--border);
+      margin-left: 12px;
+    }
+    .hero-cta-secondary:hover { background: var(--gray); }
+
+    /* flow diagram */
+    .flow {
+      padding: 48px 0;
+      border-bottom: var(--border);
+    }
+    .flow-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: lowercase;
+      opacity: 0.4;
+      margin-bottom: 20px;
+      letter-spacing: 0.05em;
+    }
+    .flow-diagram {
+      background: var(--gray);
+      border: var(--border);
+      padding: 20px 24px;
+      font-size: 13px;
+      overflow-x: auto;
+      white-space: nowrap;
+      line-height: 1.6;
+    }
+    .flow-diagram .step {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .flow-diagram .arrow {
+      opacity: 0.3;
+      margin: 0 6px;
+    }
+
+    /* markdown feed */
+    .feed-section {
+      padding: 48px 0;
+      border-bottom: var(--border);
+    }
+    .feed-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: var(--border);
+    }
+    .feed-table thead {
+      background: var(--gray);
+    }
+    .feed-table th {
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: left;
+      text-transform: lowercase;
+      border-bottom: var(--border);
+    }
+    .feed-table th:last-child {
+      text-align: right;
+    }
+    .feed-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #eee;
+      vertical-align: middle;
+    }
+    .feed-table tr:last-child td { border-bottom: none; }
+    .feed-table tr:hover { background: #FAFAFA; }
+    .feed-icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      background: var(--gray);
+      border: 1px solid #ddd;
+      vertical-align: middle;
+      margin-right: 10px;
+      text-align: center;
+      font-size: 11px;
+      line-height: 18px;
+    }
+    .feed-title { font-weight: 600; }
+    .feed-crumb {
+      opacity: 0.4;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    .feed-count {
+      text-align: right;
+      font-weight: 600;
+      opacity: 0.5;
+    }
+
+    /* section label */
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: lowercase;
+      letter-spacing: 0.08em;
+      opacity: 0.4;
+      margin-bottom: 24px;
+    }
+
+    /* features */
+    .features {
+      padding: 64px 0;
+      border-bottom: var(--border);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: var(--border);
+    }
+    .feature-card {
+      padding: 32px;
+      border-right: var(--border);
+      border-bottom: var(--border);
+      transition: background 0.15s;
+    }
+    .feature-card:nth-child(2n) { border-right: none; }
+    .feature-card:nth-child(n+3) { border-bottom: none; }
+    .feature-card:hover { background: var(--gray); }
+    .feature-icon {
+      font-size: 22px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .feature-card h3 {
+      font-family: var(--heading);
+      font-size: 22px;
+      font-weight: 400;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+    .feature-card p {
+      font-size: 13px;
+      opacity: 0.55;
+      line-height: 1.7;
+    }
+
+    /* how it works */
+    .how-section {
+      padding: 64px 0;
+      border-bottom: var(--border);
+    }
+    .how-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: var(--border);
+    }
+    .how-cell {
+      padding: 24px;
+      border-right: var(--border);
+      border-bottom: var(--border);
+    }
+    .how-cell:nth-child(2n) { border-right: none; }
+    .how-cell:last-child, .how-cell:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+    .how-cell.full-width {
+      grid-column: 1 / -1;
+      border-right: none;
+    }
+    .how-cell h3 {
+      font-family: var(--heading);
+      font-size: 20px;
+      font-weight: 400;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .how-cell h3 .num {
+      color: var(--accent);
+      margin-right: 6px;
+    }
+    .how-cell p {
+      font-size: 13px;
+      opacity: 0.55;
+      line-height: 1.65;
+    }
+
+    /* requirements table */
+    .req-section {
+      padding: 64px 0;
+      border-bottom: var(--border);
+    }
+    .req-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: var(--border);
+    }
+    .req-table th {
+      background: var(--gray);
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: lowercase;
+      text-align: left;
+      border-bottom: var(--border);
+      letter-spacing: 0.04em;
+    }
+    .req-table td {
+      padding: 12px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #eee;
+    }
+    .req-table tr:last-child td { border-bottom: none; }
+    .req-table td:first-child { font-weight: 600; }
+
+    /* setup */
+    .setup-section {
+      padding: 64px 0;
+      border-bottom: var(--border);
+    }
+    .setup-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: var(--border);
+    }
+    .setup-step {
+      padding: 24px 28px;
+      border-bottom: var(--border);
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .setup-step:last-child { border-bottom: none; }
+    .step-num {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+      width: 28px;
+    }
+    .step-content h3 {
+      font-family: var(--heading);
+      font-size: 20px;
+      font-weight: 400;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .step-content p {
+      font-size: 13px;
+      opacity: 0.55;
+      line-height: 1.65;
+    }
+    .step-content code {
+      background: var(--gray);
+      border: 1px solid #e0e0e0;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-family: var(--mono);
+    }
+
+    /* privacy banner */
+    .privacy-banner {
+      padding: 48px 0;
+      border-bottom: var(--border);
+    }
+    .privacy-inner {
+      border: var(--border);
+      padding: 32px;
+      background: var(--gray);
+    }
+    .privacy-inner h2 {
+      font-family: var(--heading);
+      font-size: 28px;
+      font-weight: 400;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .privacy-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .privacy-item {
+      font-size: 13px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      opacity: 0.65;
+    }
+    .privacy-item span:first-child {
+      color: var(--accent);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* cta */
+    .final-cta {
+      padding: 80px 0;
+      text-align: center;
+      border-bottom: var(--border);
+    }
+    .final-cta h2 {
+      font-family: var(--heading);
+      font-size: 48px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+    .final-cta h2 .accent { color: var(--accent); }
+    .final-cta p {
+      font-size: 14px;
+      opacity: 0.5;
+      margin-bottom: 32px;
+    }
+
+    /* footer */
+    footer {
+      padding: 32px 0;
+    }
+    .footer-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-links a {
+      font-size: 12px;
+      color: var(--black);
+      text-decoration: none;
+      opacity: 0.4;
+      transition: opacity 0.15s;
+    }
+    .footer-links a:hover { opacity: 1; text-decoration: underline; }
+    .footer-copy {
+      font-size: 12px;
+      opacity: 0.3;
+    }
+
+    /* responsive */
+    @media (max-width: 640px) {
+      body::before, body::after { display: none; }
+      .hero h1 { font-size: 40px; }
+      .features-grid,
+      .how-grid,
+      .privacy-grid {
+        grid-template-columns: 1fr;
+      }
+      .feature-card { border-right: none !important; border-bottom: var(--border) !important; }
+      .feature-card:last-child { border-bottom: none !important; }
+      .how-cell { border-right: none !important; border-bottom: var(--border) !important; }
+      .how-cell:last-child { border-bottom: none !important; }
+      .hero-cta-secondary { margin-left: 0; margin-top: 12px; }
+      .flow-diagram { font-size: 11px; }
+      .nav-links { gap: 16px; }
+      .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- nav -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">send2<span>iphone</span></a>
+      <ul class="nav-links">
+        <li><a href="#features">features</a></li>
+        <li><a href="#how">how it works</a></li>
+        <li><a href="https://github.com/rs7y/send2iphone" target="_blank">github</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- hero -->
+    <section class="hero">
+      <div class="hero-badge">macos only · zero deps · open source</div>
+      <h1>right-click any image.<br><span class="accent">send it to your iphone.</span></h1>
+      <p>a chrome extension + lightweight local bridge that sends any image from the web to your iphone via imessage. no accounts, no cloud, no dependencies — everything stays on your mac.</p>
+      <div>
+        <a href="https://github.com/rs7y/send2iphone" class="hero-cta" target="_blank">get started →</a>
+        <a href="#how" class="hero-cta hero-cta-secondary">how it works →</a>
+      </div>
+    </section>
+
+    <!-- flow -->
+    <section class="flow">
+      <div class="flow-label">the pipeline</div>
+      <div class="flow-diagram">
+        <span class="step">right-click image</span>
+        <span class="arrow">→</span>
+        <span class="step">chrome extension</span>
+        <span class="arrow">→</span>
+        <span class="step">local bridge (localhost:7890)</span>
+        <span class="arrow">→</span>
+        <span class="step">applescript</span>
+        <span class="arrow">→</span>
+        <span class="step">messages.app</span>
+        <span class="arrow">→</span>
+        <span class="step">📱 iphone</span>
+      </div>
+    </section>
+
+    <!-- markdown feed component -->
+    <section class="feed-section">
+      <div class="section-label">recent sends</div>
+      <table class="feed-table">
+        <thead>
+          <tr>
+            <th>your image feed</th>
+            <th>status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="feed-icon">🖼</span>
+              <span class="feed-title">product-screenshot.png</span>
+              <span class="feed-crumb">reddit.com/r/macsetups</span>
+            </td>
+            <td class="feed-count">✓ delivered</td>
+          </tr>
+          <tr>
+            <td>
+              <span class="feed-icon">📸</span>
+              <span class="feed-title">architecture-diagram.jpg</span>
+              <span class="feed-crumb">github.com/project/docs</span>
+            </td>
+            <td class="feed-count">✓ delivered</td>
+          </tr>
+          <tr>
+            <td>
+              <span class="feed-icon">🎨</span>
+              <span class="feed-title">ui-mockup-v3.png</span>
+              <span class="feed-crumb">figma.com/file/abc123</span>
+            </td>
+            <td class="feed-count">✓ delivered</td>
+          </tr>
+          <tr>
+            <td>
+              <span class="feed-icon">📷</span>
+              <span class="feed-title">vacation-photo.webp</span>
+              <span class="feed-crumb">photos.google.com/share</span>
+            </td>
+            <td class="feed-count">✓ delivered</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- features -->
+    <section class="features" id="features">
+      <div class="section-label">features</div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-icon">⚡</span>
+          <h3>two clicks. that's it.</h3>
+          <p>right-click any image in chrome, hit "send to iphone." arrives via imessage in seconds.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🔒</span>
+          <h3>100% local. zero cloud.</h3>
+          <p>the bridge only listens on 127.0.0.1. no accounts, no analytics, no telemetry. your images never leave your machine.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">📦</span>
+          <h3>zero dependencies</h3>
+          <p>the bridge server is vanilla node.js — no npm install, no package bloat. just clone and run.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🧹</span>
+          <h3>auto-cleanup</h3>
+          <p>images download to /tmp/, get sent via imessage, then immediately deleted. no trace left behind.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- how it works -->
+    <section class="how-section" id="how">
+      <div class="section-label">how it works</div>
+      <div class="how-grid">
+        <div class="how-cell">
+          <h3><span class="num">01</span> chrome extension</h3>
+          <p>adds "📱 send to iphone" to the right-click context menu on any image. sends the image url to the local bridge.</p>
+        </div>
+        <div class="how-cell">
+          <h3><span class="num">02</span> bridge server</h3>
+          <p>a zero-dependency node.js http server on localhost:7890. downloads the image and invokes applescript.</p>
+        </div>
+        <div class="how-cell full-width">
+          <h3><span class="num">03</span> applescript → messages.app → iphone</h3>
+          <p>uses messages.app's scripting interface to send the downloaded image as an imessage attachment directly to your phone.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- requirements -->
+    <section class="req-section">
+      <div class="section-label">requirements</div>
+      <table class="req-table">
+        <thead>
+          <tr>
+            <th>requirement</th>
+            <th>details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>macos</td>
+            <td>uses messages.app + applescript</td>
+          </tr>
+          <tr>
+            <td>node.js</td>
+            <td>v16 or later</td>
+          </tr>
+          <tr>
+            <td>chrome</td>
+            <td>any recent version (manifest v3)</td>
+          </tr>
+          <tr>
+            <td>imessage</td>
+            <td>must be signed in on your mac</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- setup -->
+    <section class="setup-section">
+      <div class="section-label">quick start</div>
+      <div class="setup-steps">
+        <div class="setup-step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h3>clone & start the bridge</h3>
+            <p><code>git clone https://github.com/rs7y/send2iphone.git</code> then <code>cd send2iPhone/bridge && node server.js</code></p>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h3>load the chrome extension</h3>
+            <p>open <code>chrome://extensions</code> → enable developer mode → load unpacked → select the <code>extension/</code> folder</p>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h3>configure your number</h3>
+            <p>click the send2iphone icon in chrome toolbar → enter your iphone number or apple id email → save</p>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <h3>send</h3>
+            <p>right-click any image → "📱 send to iphone" → it arrives via imessage ✨</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- privacy -->
+    <section class="privacy-banner">
+      <div class="privacy-inner">
+        <h2>privacy is not a feature. it's the architecture.</h2>
+        <div class="privacy-grid">
+          <div class="privacy-item">
+            <span>→</span>
+            <span>phone number stored locally in chrome storage only</span>
+          </div>
+          <div class="privacy-item">
+            <span>→</span>
+            <span>bridge listens on 127.0.0.1 — never exposed to network</span>
+          </div>
+          <div class="privacy-item">
+            <span>→</span>
+            <span>zero analytics, zero telemetry, zero accounts</span>
+          </div>
+          <div class="privacy-item">
+            <span>→</span>
+            <span>images download to /tmp/, sent, then immediately deleted</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- final cta -->
+    <section class="final-cta">
+      <h2>stop emailing images <span class="accent">to yourself.</span></h2>
+      <p>two clicks. localhost only. open source.</p>
+      <a href="https://github.com/rs7y/send2iphone" class="hero-cta" target="_blank">get started →</a>
+    </section>
+
+  </div>
+
+  <!-- footer -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="https://github.com/rs7y/send2iphone" target="_blank">github</a>
+        <a href="https://github.com/rs7y/send2iphone/blob/main/LICENSE" target="_blank">mit license</a>
+        <a href="https://github.com/rs7y/send2iphone/issues" target="_blank">issues</a>
+      </div>
+      <div class="footer-copy">© 2026 send2iphone</div>
+    </div>
+  </footer>
+
+</body>
+</html>
